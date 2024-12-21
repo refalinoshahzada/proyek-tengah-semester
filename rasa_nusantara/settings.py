@@ -149,7 +149,7 @@ else:
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost","http://127.0.0.1", "http://127.0.0.1:8000","http://arisha-shaista-mentalhealthtracker.pbp.cs.ui.ac.id", "https://arisha-shaista-mentalhealthtracker.pbp.cs.ui.ac.id"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost","http://127.0.0.1", "http://127.0.0.1:8000","http://localhost:59351", "http://arisha-shaista-mentalhealthtracker.pbp.cs.ui.ac.id", "https://arisha-shaista-mentalhealthtracker.pbp.cs.ui.ac.id"]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
