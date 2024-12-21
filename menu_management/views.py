@@ -183,46 +183,34 @@ def add_menu_api(request, restaurant_id):
             categories = data.get('categories', [])
 
             if not name or not categories:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Invalid input fields.'
-                }, status=400)
+                return JsonResponse({'status': 'error', 'message': 'Invalid input fields.'}, status=400)
 
             restaurant = get_object_or_404(Restaurant, id=restaurant_id)
             menu_item = MenuItem.objects.create(name=name, restaurant=restaurant)
             handle_categories(menu_item, categories)
 
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Menu item added successfully!'
-            })
+            return JsonResponse({'status': 'success', 'message': 'Menu item added successfully!'}, status=201)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
 
 @csrf_exempt
 def edit_menu_api(request, restaurant_id, menu_item_id):
-    if request.method == 'POST':
+    if request.method == 'POST':  # Pastikan metode sama dengan Flutter
         try:
             data = json.loads(request.body)
             name = data.get('name')
             categories = data.get('categories', [])
 
             if not name or not categories:
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Invalid input fields.'
-                }, status=400)
+                return JsonResponse({'status': 'error', 'message': 'Invalid input fields.'}, status=400)
 
             menu_item = get_object_or_404(MenuItem, id=menu_item_id, restaurant__id=restaurant_id)
             menu_item.name = name
             menu_item.save()
             handle_categories(menu_item, categories)
 
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Menu item updated successfully!'
-            })
+            return JsonResponse({'status': 'success', 'message': 'Menu item updated successfully!'}, status=200)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
