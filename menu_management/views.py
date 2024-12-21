@@ -154,48 +154,57 @@ def delete_menu(request, restaurant_id, id):
 
 @csrf_exempt
 def add_menu_api(request, restaurant_id):
-    print(f"Request method: {request.method}")  # Debug: Method HTTP
-    print(f"Request body: {request.body}")  # Debug: Isi body request
+    # Debug: Log request method dan isi body request
+    print(f"Request method: {request.method}")  
+    print(f"Request received for restaurant ID: {restaurant_id}")  
+    print(f"Request body: {request.body}")  
 
     if request.method == 'POST':
         try:
+            # Parse JSON data dari request body
             data = json.loads(request.body)
-            print(f"Parsed JSON data: {data}")  # Debug: JSON setelah di-parse
+            print(f"Parsed JSON: {data}")  
 
+            # Validasi input
             name = data.get('name')
             categories = data.get('categories', [])
 
-            print(f"Name: {name}, Categories: {categories}")  # Debug: Data validasi input
-
             if not name or not categories:
-                print("Invalid input fields.")  # Debug: Input tidak valid
+                print("Invalid input: Missing name or categories.")  # Debug
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Invalid input fields.'
+                    'message': 'Invalid input fields.',
                 }, status=400)
 
+            # Periksa apakah restoran valid
             restaurant = get_object_or_404(Restaurant, id=restaurant_id)
-            print(f"Found restaurant: {restaurant}")  # Debug: Restoran yang ditemukan
+            print(f"Restaurant found: {restaurant.name}")  
 
+            # Buat MenuItem baru
             menu_item = MenuItem.objects.create(name=name, restaurant=restaurant)
-            print(f"Created MenuItem: {menu_item}")  # Debug: Menu item berhasil dibuat
+            print(f"MenuItem created: {menu_item}")  
 
-            handle_categories(menu_item, categories)
-            print(f"Categories added to MenuItem: {menu_item.categories.all()}")  # Debug: Kategori yang ditambahkan
+            # Tambahkan kategori ke MenuItem
+            for category_name in categories:
+                category, _ = Category.objects.get_or_create(name=category_name.title())
+                menu_item.categories.add(category)
+                print(f"Added category: {category.name}")  
 
+            # Respon sukses
             return JsonResponse({
                 'status': 'success',
-                'message': 'Menu item added successfully!'
+                'message': 'Menu item added successfully!',
             })
+
         except Exception as e:
-            print(f"Error occurred: {str(e)}")  # Debug: Error saat menjalankan logika
+            print(f"Error occurred: {str(e)}")  # Debug: Tangkap error
             return JsonResponse({
                 'status': 'error',
-                'message': str(e)
+                'message': str(e),
             }, status=500)
     else:
-        print("Invalid request method.")  # Debug: Metode request tidak valid
-    return JsonResponse({
-        'status': 'error',
-        'message': 'Invalid request method.'
-    }, status=405)
+        print("Invalid request method.")  # Debug
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid request method.',
+        }, status=405)
