@@ -13,40 +13,37 @@ ALLOWED_CATEGORIES = [
     "wedang", "lontong", "rujak cingur", "mangut lele", "ayam", "lainnya"
 ]
 
-@csrf_exempt
 def handle_categories(menu_item, category_names):
-    menu_item.categories.clear()  # Clear existing associations
+    """
+    Helper untuk set categories di MenuItem
+    """
+    menu_item.categories.clear()
     for name in category_names:
-        name = name.strip().lower()
-        if name in ALLOWED_CATEGORIES:
-            category, _ = Category.objects.get_or_create(name=name.title())
+        lower_name = name.strip().lower()
+        if lower_name in ALLOWED_CATEGORIES:
+            # Buat Category (jika belum ada) dengan huruf depan kapital
+            category, _ = Category.objects.get_or_create(name=lower_name.title())
             menu_item.categories.add(category)
 
 
 
 @csrf_exempt
-def menu_items_api(request, restaurant_id):
-    print(f"Request method: {request.method}")  # Debug
-    print(f"Request received for restaurant_id: {restaurant_id}")  # Debug
+def menu_api(request, restaurant_id):
+    """
+    GET: Mengambil daftar menu item (JSON) untuk restaurant_id tertentu
+    """
     if request.method == 'GET':
-        try:
-            restaurant = get_object_or_404(Restaurant, id=restaurant_id)
-            menu_items = restaurant.menu_items.all()
-            data = [
-                {
-                    "id": str(item.id),
-                    "name": item.name,
-                    "categories": [category.name for category in item.categories.all()]
-                }
-                for item in menu_items
-            ]
-            print(f"Menu items: {data}")  # Debug
-            return JsonResponse(data, safe=False)
-        except Exception as e:
-            print(f"Error: {e}")  # Debug
-            return JsonResponse({"error": str(e)}, status=500)
-    else:
-        return JsonResponse({"error": "Invalid request method."}, status=405)
+        restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+        menu_items = restaurant.menu_items.all()
+        data = []
+        for item in menu_items:
+            data.append({
+                "id": str(item.id),
+                "name": item.name,
+                "categories": [cat.name for cat in item.categories.all()],
+            })
+        return JsonResponse(data, safe=False)
+    return JsonResponse({"error": "Invalid request method."}, status=405)
 
 
 
@@ -153,58 +150,99 @@ def delete_menu(request, restaurant_id, id):
     return redirect('menu_management:admin_menu', restaurant_id=restaurant_id)
 
 @csrf_exempt
-def add_menu_api(request, restaurant_id):
-    # Debug: Log request method dan isi body request
-    print(f"Request method: {request.method}")  
-    print(f"Request received for restaurant ID: {restaurant_id}")  
-    print(f"Request body: {request.body}")  
+def menu_api(request, restaurant_id):
+    print(f"Request method: {request.method}")  # Debug: Method HTTP
+    try:
+        if request.method == 'GET':
+            restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+            menu_items = restaurant.menu_items.all()
+            data = [
+                {
+                    "id": str(item.id),
+                    "name": item.name,
+                    "categories": [category.name for category in item.categories.all()]
+                }
+                for item in menu_items
+            ]
+            print(f"Menu items fetched: {data}")  # Debug: Output fetched data
+            return JsonResponse(data, safe=False)
+    except Exception as e:
+        print(f"Error in menu_api: {e}")  # Debug: Error log
+        return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request method."}, status=405)
 
+@csrf_exempt
+def add_menu_api(request, restaurant_id):
+    """
+    POST: Menerima JSON { 'name': '...', 'categories': [...] }
+    Lalu membuat MenuItem baru
+    """
     if request.method == 'POST':
         try:
-            # Parse JSON data dari request body
             data = json.loads(request.body)
-            print(f"Parsed JSON: {data}")  
-
-            # Validasi input
             name = data.get('name')
             categories = data.get('categories', [])
 
-            if not name or not categories:
-                print("Invalid input: Missing name or categories.")  # Debug
+            if not name:
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'Invalid input fields.',
+                    'message': 'Name cannot be empty.'
                 }, status=400)
 
-            # Periksa apakah restoran valid
+            # Dapatkan restaurant
             restaurant = get_object_or_404(Restaurant, id=restaurant_id)
-            print(f"Restaurant found: {restaurant.name}")  
+            menu_item = MenuItem.objects.create(
+                restaurant=restaurant,
+                name=name,
+            )
+            handle_categories(menu_item, categories)
 
-            # Buat MenuItem baru
-            menu_item = MenuItem.objects.create(name=name, restaurant=restaurant)
-            print(f"MenuItem created: {menu_item}")  
-
-            # Tambahkan kategori ke MenuItem
-            for category_name in categories:
-                category, _ = Category.objects.get_or_create(name=category_name.title())
-                menu_item.categories.add(category)
-                print(f"Added category: {category.name}")  
-
-            # Respon sukses
             return JsonResponse({
                 'status': 'success',
-                'message': 'Menu item added successfully!',
-            })
-
+                'message': 'Menu item added successfully!'
+            }, status=201)
         except Exception as e:
-            print(f"Error occurred: {str(e)}")  # Debug: Tangkap error
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+@csrf_exempt
+def edit_menu_api(request, restaurant_id, menu_item_id):
+    """
+    POST: Menerima JSON { 'name': '...', 'categories': [...] }
+    Lalu update MenuItem.
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name')
+            categories = data.get('categories', [])
+
+            menu_item = get_object_or_404(MenuItem, id=menu_item_id, restaurant__id=restaurant_id)
+            menu_item.name = name
+            menu_item.save()
+            handle_categories(menu_item, categories)
+
             return JsonResponse({
-                'status': 'error',
-                'message': str(e),
-            }, status=500)
-    else:
-        print("Invalid request method.")  # Debug
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid request method.',
-        }, status=405)
+                'status': 'success',
+                'message': 'Menu item updated successfully!'
+            }, status=200)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+@csrf_exempt
+def delete_menu_api(request, restaurant_id, menu_item_id):
+    """
+    DELETE: Menghapus MenuItem
+    """
+    if request.method == 'DELETE':
+        try:
+            menu_item = get_object_or_404(MenuItem, id=menu_item_id, restaurant__id=restaurant_id)
+            menu_item.delete()
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Menu item deleted successfully!'
+            }, status=200)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
