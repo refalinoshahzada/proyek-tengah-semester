@@ -2,6 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test
 from main.models import Restaurant, MenuItem, Category
 from .forms import MenuItemForm
+from django.http import JsonResponse
+from main.models import Restaurant, MenuItem
+from django.shortcuts import get_object_or_404
 
 ALLOWED_CATEGORIES = [
     "gudeg", "oseng", "bakpia", "sate", "sego gurih",
@@ -15,6 +18,19 @@ def handle_categories(menu_item, category_names):
         if name in ALLOWED_CATEGORIES:
             category, _ = Category.objects.get_or_create(name=name.title())
             menu_item.categories.add(category)
+
+def menu_items_api(request, restaurant_id):
+    restaurant = get_object_or_404(Restaurant, id=restaurant_id)
+    menu_items = restaurant.menu_items.all()
+    data = [
+        {
+            "id": str(item.id),
+            "name": item.name,
+            "categories": [category.name for category in item.categories.all()]
+        }
+        for item in menu_items
+    ]
+    return JsonResponse(data, safe=False)
 
 @user_passes_test(lambda u: u.is_staff, login_url='main:login')
 def admin_menu_view(request, restaurant_id):
