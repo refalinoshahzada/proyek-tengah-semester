@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
 {% block meta %}
-    Edit Restaurant - Admin View
+    <title>Edit Restaurant</title>
 {% endblock meta %}
-
 {% block content %}
 {% include 'navbar.html' %}
 
@@ -16,7 +15,7 @@
             {% csrf_token %}
             {% for field in form %}
                 <div class="mb-4">
-                    {{ field.label }}
+                    {{ field.label_tag }}
                     {{ field }}
                     {% if field.errors %}
                         <div class="text-red-500 text-sm mt-1">
@@ -39,65 +38,70 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('editRestaurantForm');
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editRestaurantForm');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
         
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(form);
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            fetch("{% url 'adminview:edit_restaurant' uuid=restaurant.id|stringformat:'s' %}", {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrfToken
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    const messageContainer = document.getElementById('message-container');
-                    messageContainer.innerHTML = `
-                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-                            ${data.message}
-                        </div>
-                    `;
-                    
-                    // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.href = data.redirect_url;
-                    }, 1000);
-                } else {
-                    // Show error messages
+        const formData = new FormData(form);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch("{% url 'adminview:edit_restaurant' uuid=restaurant.id|stringformat:'s' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const messageContainer = document.getElementById('message-container');
+            if (data.success) {
+                messageContainer.innerHTML = `
+                    <div class="bg-green-100 border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
+                        ${data.message}
+                    </div>
+                `;
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1000);
+            } else {
+                // Show error messages
+                if (data.errors) {
                     Object.keys(data.errors).forEach(field => {
-                        const errorElement = document.querySelector(`#id_${field}`).parentElement.querySelector('.text-red-500');
-                        if (errorElement) {
-                            errorElement.textContent = data.errors[field].join(', ');
-                        } else {
-                            const fieldElement = document.querySelector(`#id_${field}`);
-                            const errorDiv = document.createElement('div');
-                            errorDiv.className = 'text-red-500 text-sm mt-1';
-                            errorDiv.textContent = data.errors[field].join(', ');
-                            fieldElement.parentElement.appendChild(errorDiv);
+                        const fieldEl = document.querySelector('#id_' + field);
+                        if (fieldEl) {
+                            let errorEl = fieldEl.parentElement.querySelector('.text-red-500');
+                            if (!errorEl) {
+                                errorEl = document.createElement('div');
+                                errorEl.className = 'text-red-500 text-sm mt-1';
+                                fieldEl.parentElement.appendChild(errorEl);
+                            }
+                            errorEl.textContent = data.errors[field].join(', ');
                         }
                     });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                const messageContainer = document.getElementById('message-container');
-                messageContainer.innerHTML = `
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-                        An error occurred while processing your request.
-                    </div>
-                `;
-            });
+                if (data.message) {
+                    messageContainer.innerHTML = `
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                            ${data.message}
+                        </div>
+                    `;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const messageContainer = document.getElementById('message-container');
+            messageContainer.innerHTML = `
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                    An error occurred while processing your request.
+                </div>
+            `;
         });
     });
+});
 </script>
 {% endblock content %}

@@ -13,6 +13,5 @@ urlpatterns = [
     path('restaurant/<uuid:restaurant_id>/', product_detail, name='product_detail'),
     path('json/', show_json, name='show_json'),
     path('restaurantdetail/<uuid:restaurant_id>/', product_detail, name='product_detail'),
-    path('json/', show_json, name='show_json'),
     path('auth/', include('authentication.urls')),
 ]
