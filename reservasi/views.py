@@ -9,6 +9,7 @@ from main.models import Restaurant  # Assuming you have the Restaurant model in 
 from uuid import UUID
 from django.utils import timezone
 from django.core import serializers
+from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 @login_required
