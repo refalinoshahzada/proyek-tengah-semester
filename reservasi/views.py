@@ -10,6 +10,7 @@ from uuid import UUID
 from django.utils import timezone
 from django.core import serializers
 
+@csrf_exempt
 @login_required
 def create_reservation(request, restaurant_id):
     restaurant = get_object_or_404(Restaurant, id=restaurant_id)
@@ -62,6 +63,7 @@ def cancel_reservation(request, reservation_id):
     }
     return render(request, 'cancel_reservation.html', {'reservation': reservation_data})  # Render confirmation template
 
+@csrf_exempt
 @login_required
 def user_reservations(request):
     filter_option = request.GET.get('filter', 'all')  # Get the filter option from the request
@@ -76,7 +78,7 @@ def user_reservations(request):
 
     return render(request, 'user_reservations.html', {'reservations': reservations, 'filter_option': filter_option})
 
-
+@csrf_exempt
 @login_required
 def edit_reservation(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id, user=request.user)  # Ensure the user owns the reservation
@@ -99,6 +101,7 @@ def edit_reservation(request, reservation_id):
     }
     return JsonResponse({'success': True, 'reservation': reservation_data})  # Return reservation data for AJAX
 
+@csrf_exempt
 @login_required
 def show_json(request):
     reservations = Reservation.objects.filter(user=request.user).select_related('restaurant')
