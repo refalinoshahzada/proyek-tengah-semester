@@ -40,6 +40,7 @@ def admin_restaurant_view(request):
 @csrf_exempt
 @staff_member_required(login_url='main:login')
 def add_restaurant(request):
+    """Django web form handler for adding restaurants"""
     if request.method == 'POST':
         form = RestaurantForm(request.POST)
         if form.is_valid():
@@ -60,7 +61,6 @@ def add_restaurant(request):
                 })
     else:
         form = RestaurantForm()
-
     return render(request, 'adminview/add_restaurant.html', {'form': form})
 
 @csrf_exempt
@@ -140,6 +140,7 @@ def delete_menu(request, restaurant_id, id):
 
 @csrf_exempt
 def add_restaurant_json(request):
+    """Flutter JSON API endpoint for adding restaurants"""
     if request.method == "POST":
         try:
             data = json.loads(request.body)
