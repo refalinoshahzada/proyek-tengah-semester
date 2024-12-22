@@ -9,7 +9,9 @@ from .views import (
     edit_menu,
     delete_menu,
     add_restaurant_json,
-    restaurant_count
+    restaurant_count,
+    edit_restaurant_json,
+    delete_restaurant_json
 )
 
 app_name = 'adminview'
@@ -30,4 +32,6 @@ urlpatterns = [
     # JSON endpoints
     path('json/', add_restaurant_json, name='add_restaurant'),
     path('restaurant-count/', restaurant_count, name='restaurant_count'),
+    path('edit-json/<str:uuid>/', edit_restaurant_json, name='edit_restaurant_json'),
+    path('delete-json/<str:uuid>/', delete_restaurant_json, name='delete_restaurant_json'),
 ]

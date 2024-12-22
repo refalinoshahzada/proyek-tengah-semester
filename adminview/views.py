@@ -171,3 +171,49 @@ def add_restaurant_json(request):
 def restaurant_count(request):
     count = Restaurant.objects.count()
     return JsonResponse({'count': count})
+
+# views.py - Add these new JSON endpoints
+
+@csrf_exempt
+def edit_restaurant_json(request, uuid):
+    if request.method == "POST":
+        try:
+            restaurant = get_object_or_404(Restaurant, id=uuid)
+            data = json.loads(request.body)
+            
+            # Update restaurant fields
+            restaurant.name = data.get("name", restaurant.name)
+            restaurant.location = data.get("location", restaurant.location)
+            restaurant.average_price = data.get("average_price", restaurant.average_price)
+            restaurant.rating = data.get("rating", restaurant.rating)
+            
+            # Validate the data
+            if not restaurant.name or not restaurant.location or \
+                restaurant.average_price <= 0 or not (0 <= restaurant.rating <= 5):
+                    return JsonResponse(
+                        {"status": "error", "message": "Invalid input fields"},
+                        status=400,
+                    )
+            
+            restaurant.save()
+            return JsonResponse({
+                "status": "success",
+                "message": "Restaurant updated successfully"
+            })
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
+
+@csrf_exempt
+def delete_restaurant_json(request, uuid):
+    if request.method == "POST":
+        try:
+            restaurant = get_object_or_404(Restaurant, id=uuid)
+            restaurant.delete()
+            return JsonResponse({
+                "status": "success",
+                "message": "Restaurant deleted successfully"
+            })
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"status": "error", "message": "Invalid method"}, status=405)
