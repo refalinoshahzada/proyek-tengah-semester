@@ -1,30 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test
-from main.models import Restaurant
-from django.http import JsonResponse, HttpResponseRedirect
-from django.urls import reverse
 from django.contrib.admin.views.decorators import staff_member_required
+from main.models import Restaurant, Category
+from django.http import JsonResponse
+from django.urls import reverse
 from django.forms import ModelForm
-from django.shortcuts import render, get_object_or_404
-from menu_management.models import MenuItem, Restaurant
-from django.shortcuts import render
-from menu_management.views import admin_menu_view, add_menu, edit_menu, delete_menu
-from main.models import *
 from django.views.decorators.csrf import csrf_exempt
 import json
-
 
 class RestaurantForm(ModelForm):
     class Meta:
         model = Restaurant
         fields = ['name', 'location', 'average_price', 'rating']
 
-
-
+@csrf_exempt
 @staff_member_required(login_url='main:login')
 def admin_restaurant_view(request):
     restaurants = Restaurant.objects.all()
-
     categories = Category.objects.all()
 
     category_id = request.GET.get('category')
@@ -32,7 +24,6 @@ def admin_restaurant_view(request):
 
     if category_id:
         restaurants = restaurants.filter(menu_items__categories__id=category_id).distinct()
-
     if sort_option == 'low_to_high':
         restaurants = restaurants.order_by('average_price')
     elif sort_option == 'high_to_low':
@@ -46,6 +37,7 @@ def admin_restaurant_view(request):
     }
     return render(request, 'adminview/admin_restaurant.html', context)
 
+@csrf_exempt
 @staff_member_required(login_url='main:login')
 def add_restaurant(request):
     if request.method == 'POST':
@@ -68,13 +60,18 @@ def add_restaurant(request):
                 })
     else:
         form = RestaurantForm()
-    
+
     return render(request, 'adminview/add_restaurant.html', {'form': form})
 
+@csrf_exempt
 @staff_member_required(login_url='main:login')
 def edit_restaurant(request, uuid):
+    """
+    Edits a Restaurant by a single UUID (restaurant.id).
+    URL example: /adminview/edit/<str:uuid>/
+    """
     restaurant = get_object_or_404(Restaurant, id=uuid)
-    
+
     if request.method == 'POST':
         form = RestaurantForm(request.POST, instance=restaurant)
         if form.is_valid():
@@ -95,12 +92,13 @@ def edit_restaurant(request, uuid):
                 })
     else:
         form = RestaurantForm(instance=restaurant)
-    
+
     return render(request, 'adminview/edit_restaurant.html', {
         'form': form,
         'restaurant': restaurant
     })
 
+@csrf_exempt
 @staff_member_required(login_url='main:login')
 def delete_restaurant(request, uuid):
     restaurant = get_object_or_404(Restaurant, id=uuid)
@@ -108,9 +106,40 @@ def delete_restaurant(request, uuid):
     return redirect('adminview:admin_restaurant')
 
 @csrf_exempt
+@staff_member_required(login_url='main:login')
+def admin_menu_view(request, restaurant_id):
+    """
+    Example placeholder for menu management by RESTAURANT
+    """
+    return JsonResponse({'info': 'admin_menu_view placeholder'})
+
+@csrf_exempt
+@staff_member_required(login_url='main:login')
+def add_menu(request, restaurant_id):
+    """
+    Example placeholder for add_menu
+    """
+    return JsonResponse({'info': 'add_menu placeholder'})
+
+@csrf_exempt
+@staff_member_required(login_url='main:login')
+def edit_menu(request, restaurant_id, id):
+    """
+    Edits a MENU item, requiring two UUIDs: 
+    /adminview/admin_menu/edit/<uuid:restaurant_id>/<uuid:id>/
+    """
+    return JsonResponse({'info': 'edit_menu placeholder'})
+
+@csrf_exempt
+@staff_member_required(login_url='main:login')
+def delete_menu(request, restaurant_id, id):
+    """
+    Example placeholder for delete_menu
+    """
+    return JsonResponse({'info': 'delete_menu placeholder'})
+
+@csrf_exempt
 def add_restaurant_json(request):
-    print("Request method:", request.method)  # Log metode HTTP
-    print("Request body:", request.body) 
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -124,9 +153,8 @@ def add_restaurant_json(request):
                     {"status": "error", "message": "Invalid input fields"},
                     status=400,
                 )
-
-            # Create the restaurant
-            restaurant = Restaurant.objects.create(
+            
+            Restaurant.objects.create(
                 name=name,
                 location=location,
                 average_price=average_price,
