@@ -8,7 +8,7 @@ from django.forms import ModelForm
 from django.shortcuts import render, get_object_or_404
 from menu_management.models import MenuItem, Restaurant
 from django.shortcuts import render
-from menu_management.views import admin_menu_view, add_menu, edit_menu, delete_menu
+from menu_management.views import admin_menu_view, add_menu, edit_menu, delete_menu,menu_api,add_menu_api,edit_menu_api,delete_menu_api
 from main.models import *
 from django.views.decorators.csrf import csrf_exempt
 import json
