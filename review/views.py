@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 
-
+@csrf_exempt
 @login_required
 def add_review_ajax(request, restaurant_name):
     restaurant = get_object_or_404(Restaurant, name=restaurant_name)
@@ -35,7 +35,7 @@ def add_review_ajax(request, restaurant_name):
 
     return JsonResponse({'error': 'Invalid form'}, status=400)
 
-
+@csrf_exempt
 def edit_review(request, id):
     # Mendapatkan review berdasarkan id
     review = get_object_or_404(Review, pk=id)
@@ -54,7 +54,7 @@ def edit_review(request, id):
     }
     return render(request, "edit_review.html", context)
 
-
+@csrf_exempt
 def delete_review(request, id):
     # Mendapatkan review berdasarkan id
     review = get_object_or_404(Review, pk=id)
@@ -68,7 +68,7 @@ def delete_review(request, id):
 
 
 
-
+@csrf_exempt
 def restaurant_review(request, name):
     # Mendapatkan restoran berdasarkan nama
     restaurant = get_object_or_404(Restaurant, name=name)
@@ -86,6 +86,7 @@ def restaurant_review(request, name):
     }
     return render(request, 'restaurant_review.html', context)
 
+@csrf_exempt
 def edit_review_ajax(request):
     if request.method == 'POST':
         review_id = request.POST.get('review_id')
