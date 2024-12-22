@@ -10,7 +10,7 @@ Admin View - Rasa Nusantara
 <div class="min-h-screen bg-[#453229] w-full pt-20 pb-8">
     <h1 class="text-2xl text-white mb-6">Menu for {{ restaurant.name }}</h1>
     <div class="flex justify-end mb-4">
-        <a href="{% url 'adminview:add_menu' restaurant.id %}" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add Menu Item</a>
+        <a href="{% url 'menu_management:add_menu' restaurant.id %}" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add Menu Item</a>
     </div>
 
     <div class="flex flex-wrap justify-center gap-6 overflow-y-auto h-auto">
@@ -26,8 +26,8 @@ Admin View - Rasa Nusantara
                     {% endif %}
                 </p>
                 <div class="flex gap-2 mt-4">
-                    <a href="{% url 'adminview:edit_menu' restaurant.id item.id %}" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Edit</a>
-                    <form action="{% url 'adminview:delete_menu' restaurant.id item.id %}" method="POST" style="display:inline;">
+                    <a href="{% url 'menu_management:edit_menu' restaurant.id item.id %}" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Edit</a>
+                    <form action="{% url 'menu_management:delete_menu' restaurant.id item.id %}" method="POST" style="display:inline;">
                         {% csrf_token %}
                         <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
                     </form>
